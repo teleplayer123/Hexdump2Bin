@@ -6,17 +6,17 @@ use std::io::{self, BufRead};
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let cli_args = CliArgs::new(&args);
-    let mut outfile = fs::File::create(cli_args.outfile);
+    let outfile = cli_args.outfile.to_string();
     let filename = cli_args.infile.to_string();
 
     match parse_file(&filename) {
         Ok(parts) => {
             for part in parts {
-                fs::write(outfile, part);
+                fs::write(&outfile, part).expect("Error writing to log file");
             }
         }
         Err(e) => {
-            eprint!("Error processing file");
+            eprint!("Error processing file: {}", e);
         }
     }
     Ok(())
