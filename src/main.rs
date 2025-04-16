@@ -59,15 +59,15 @@ fn parse_file(path: &str) -> io::Result<Vec<String>> {
     for line_result in reader.lines() {
         match line_result {
             Ok(line) => {
-                let parts: Vec<&str> = line.splitn(2, ':').collect();
+                let parts: Vec<&str> = line.splitn(2, ":").collect();
                 if parts.len() == 2 {
                     results.push(parts[1].trim().to_string());
                 } else {
-                    eprint!("Warning: skipping invalid line");
+                    eprint!("Warning: skipping invalid line\n");
                 }
             }
             Err(e) => {
-                eprint!("Error reading line: {}", e);
+                eprint!("Error reading line: {}\n", e);
             }
         }
     }
@@ -93,7 +93,7 @@ fn hex_to_bytes(hex_string: &str) -> Result<Vec<u8>, ()> {
 
 fn write_to_binary_file(bytes: &[u8], outfile: &str) {
     let mut file = match fs::File::create(outfile) {
-        Err(why) => panic!("couldn't create {}: {}", outfile, why),
+        Err(why) => panic!("Couldn't create {}: {}", outfile, why),
         Ok(file) => file,
     };
     if let Err(why) = file.write_all(&bytes[..]) {
