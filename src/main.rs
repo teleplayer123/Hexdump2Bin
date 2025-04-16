@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::io::{self, BufRead, Write, BufWriter, Read};
+use std::io::{self, BufRead, Write};
 
 
 fn main() -> io::Result<()> {
@@ -25,7 +25,7 @@ fn main() -> io::Result<()> {
             {
                 let mut bfile = fs::File::create(outfile)?;
                 let hex_data = hex_data.unwrap();
-                bfile.write((&hex_data))?;
+                bfile.write(&hex_data)?;
             }
 
             // write!(&txt_outfile, "{}", hex_data.unwrap()).expect("Error writing to log file");
