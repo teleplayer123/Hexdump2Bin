@@ -17,7 +17,7 @@ fn main() -> io::Result<()> {
             write_to_binary_file(&bytes, &outfile);
         }
         Err(_) => {
-            eprint!("Error converting hex to bytes");
+            eprint!("Error writing binary file\n");
         }
     }
     // match parse_file(&filename) {
@@ -61,7 +61,8 @@ fn parse_file(path: &str) -> io::Result<Vec<String>> {
             Ok(line) => {
                 let parts: Vec<&str> = line.splitn(2, ":").collect();
                 if parts.len() == 2 {
-                    results.push(parts[1].trim().to_string());
+                    let part = &parts[1].trim().to_string();
+                    results.push(part.to_string());
                 } else {
                     eprint!("Warning: skipping invalid line\n");
                 }
@@ -97,7 +98,7 @@ fn write_to_binary_file(bytes: &[u8], outfile: &str) {
         Ok(file) => file,
     };
     if let Err(why) = file.write_all(&bytes[..]) {
-        panic!("Couldn't write to {}: {}", "output.bin", why);
+        panic!("Couldn't write to {}: {}", outfile, why);
     }
 }
 
