@@ -1,13 +1,12 @@
 use std::env;
 use std::fs;
-use std::io::{self, BufRead, Write};
-// use std::{fmt, num::ParseIntError};
+use std::io::{self, BufRead, Write, BufWriter};
 
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let cli_args = CliArgs::new(&args);
-    // let mut outfile = fs::File::create(cli_args.outfile.to_string())?;
+    let txt_outfile = fs::File::create(cli_args.outfile.to_string())?;
     let outfile = cli_args.outfile.to_string();
     let filename = cli_args.infile.to_string();
     let data = parse_file(&filename)?;
@@ -20,16 +19,19 @@ fn main() -> io::Result<()> {
             eprint!("Error writing binary file\n");
         }
     }
-    // match parse_file(&filename) {
-    //     Ok(parts) => {
-    //         for part in parts {
-    //             write!(outfile, "{}", part).expect("Error writing to log file");
-    //         }
-    //     }
-    //     Err(e) => {
-    //         eprint!("Error processing file: {}", e);
-    //     }
-    // }
+    match parse_file(&filename) {
+        Ok(parts) => {
+            let mut bfile = BufWriter::new(txt_outfile);
+            for part in parts {
+                let hex_data = hex_to_bytes(&part.trim());
+                let _ = bfile.write_all(&hex_data.unwrap());
+                // write!(txt_outfile, "{}", &hex_data).expect("Error writing to log file");
+            }
+        }
+        Err(e) => {
+            eprint!("Error processing file: {}", e);
+        }
+    }
     Ok(())
 }
 
@@ -59,10 +61,10 @@ fn parse_file(path: &str) -> io::Result<Vec<String>> {
     for line_result in reader.lines() {
         match line_result {
             Ok(line) => {
-                let parts: Vec<&str> = line.splitn(2, ":").collect();
+                let parts: Vec<&str> = line.splitn(2, ':').collect();
                 if parts.len() == 2 {
-                    let part = &parts[1].trim().to_string();
-                    results.push(part.to_string());
+                    let part = &parts[1].trim().to_string()[..32];
+                    results.push((&part).to_string());
                 } else {
                     eprint!("Warning: skipping invalid line\n");
                 }
