@@ -8,27 +8,10 @@ fn main() -> io::Result<()> {
     let cli_args = CliArgs::new(&args);
     let outfile = cli_args.outfile.to_string();
     let filename = cli_args.infile.to_string();
-    // let txt_outfile = fs::File::create(&outfile)?;
-    // let data = parse_file(&filename)?;
-    // let bytes = hex_to_bytes(&data.join(" "));
-    // match bytes {
-    //     Ok(bytes) => {
-    //         write_to_binary_file(&bytes, &outfile);
-    //     }
-    //     Err(_) => {
-    //         eprint!("Error writing binary file\n");
-    //     }
-    // }
-    match parse_file(&filename) {
-        Ok(parts) => {
-            let hex_data = hex_to_bytes(&parts.join(" "));
-            {
-                let mut bfile = fs::File::create(outfile)?;
-                let hex_data = hex_data.unwrap();
-                bfile.write(&hex_data)?;
-            }
 
-            // write!(&txt_outfile, "{}", hex_data.unwrap()).expect("Error writing to log file");
+    match parse_file(&filename, &outfile) {
+        Ok(()) => {
+            println!("Successfully extracted hex code from '{}' and wrote to '{}'", filename, outfile);
         }
         Err(e) => {
             eprint!("Error processing file: {}", e);
@@ -54,88 +37,44 @@ impl CliArgs {
     }
 }
 
-fn parse_file(path: &str) -> io::Result<Vec<String>> {
+fn parse_file(path: &str, outfile: &str) -> io::Result<()> {
     let file = fs::File::open(path)?;
-    let reader = io::BufReader::new(file);
-    let mut results = Vec::new();
-    // let contents = fs::read_to_string(path).expect("Error reading file");    
-    
+    let reader = io::BufReader::new(file);  
+    let mut output_file = fs::File::create(outfile)?;
+    let mut hexstr = String::new();
+
     for line_result in reader.lines() {
         match line_result {
             Ok(line) => {
                 let parts: Vec<&str> = line.splitn(2, ':').collect();
                 if parts.len() == 2 {
-                    let part = &parts[1].trim().to_string()[..32];
-                    results.push((&part).to_string());
+                    let line = parts[1].trim()[..32].to_string();
+                    for char in line.chars() {
+                        if char.is_ascii_hexdigit() {
+                            hexstr.push(char);
+                        }
+                    }
+                    for i in (0..hexstr.len()).step_by(2) {
+                        if i + 1 < hexstr.len() {
+                            let byte_str = &hexstr[i..i + 2];
+                            if let Ok(byte) = u8::from_str_radix(byte_str, 16) {
+                                output_file.write_all(&[byte])?;
+                            } else {
+                                eprintln!("Warning: Invalid hex sequence '{}' in line: {}", byte_str, line);
+                            }
+                        } else if hexstr.len() % 2 != 0 {
+                            eprintln!("Warning: Odd number of hex digits at the end of a line: {}", line);
+                        }
+                    }
+                    hexstr.clear(); // Clear hexstr for the next line
                 } else {
-                    eprint!("Warning: skipping invalid line\n");
+                    eprintln!("Warning: Invalid line format: {}", line);
                 }
             }
             Err(e) => {
-                eprint!("Error reading line: {}\n", e);
+                eprintln!("Error reading line: {}", e);
             }
         }
     }
-    Ok(results)
+    Ok(())
 }
-
-fn hex_to_bytes(hex_string: &str) -> Result<Vec<u8>, ()> {
-    let mut bytes = Vec::new();
-    for i in (0..hex_string.len()).step_by(2) {
-        let c1 = hex_string.chars().nth(i).unwrap();
-        let c2 = hex_string.chars().nth(i + 1).unwrap();
-        let byte: u8 = match (c1, c2) {
-            ('0'..='9', 'a'..='f') | ('a'..='f', '0'..='9') => {
-                u8::from_str_radix(&format!("{}{}", c1, c2), 16)
-                    .map_err(|_| ())?
-            }
-            _ => return Err(()),
-        };
-        bytes.push(byte);
-    }
-    Ok(bytes)
-}
-
-fn write_to_binary_file(bytes: &[u8], outfile: &str) {
-    let mut file = match fs::File::create(outfile) {
-        Err(why) => panic!("Couldn't create {}: {}", outfile, why),
-        Ok(file) => file,
-    };
-    if let Err(why) = file.write_all(&bytes[..]) {
-        panic!("Couldn't write to {}: {}", outfile, why);
-    }
-}
-
-// #[derive(Debug, Clone, PartialEq, Eq)]
-// enum DecodeHexError {
-//     OddLength,
-//     ParseInt(ParseIntError),
-// }
-
-// impl From<ParseIntError> for DecodeHexError {
-//     fn from(e: ParseIntError) -> Self {
-//         DecodeHexError::ParseInt(e)
-//     }
-// }
-
-// impl fmt::Display for DecodeHexError {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         match self {
-//             DecodeHexError::OddLength => "input string has an odd number of bytes".fmt(f),
-//             DecodeHexError::ParseInt(e) => e.fmt(f),
-//         }
-//     }
-// }
-
-// impl std::error::Error for DecodeHexError {}
-
-// fn decode_hex(s: &str) -> Result<Vec<u8>, DecodeHexError> {
-//     if s.len() % 2 != 0 {
-//         Err(DecodeHexError::OddLength)
-//     } else {
-//         (0..s.len())
-//             .step_by(2)
-//             .map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.into()))
-//             .collect()
-//     }
-// }
