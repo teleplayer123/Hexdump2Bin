@@ -1,1 +1,1 @@
-A rust program to conver a memory hexdump to a binary file.
+A rust program to convert a memory hexdump to a binary file.
