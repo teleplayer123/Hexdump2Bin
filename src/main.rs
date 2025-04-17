@@ -68,7 +68,7 @@ fn parse_file(path: &str, outfile: &str) -> io::Result<()> {
                     }
                     hexstr.clear(); // Clear hexstr for the next line
                 } else {
-                    eprintln!("Warning: Invalid line format: {}", line);
+                    eprintln!("Warning: Invalid line format: {}, skipping...", line);
                 }
             }
             Err(e) => {
