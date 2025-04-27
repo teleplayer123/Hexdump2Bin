@@ -33,7 +33,7 @@ impl CliArgs {
         let infile = args[1].clone();
         let outfile = args[2].clone();
 
-        CliArgs { infile, outfile}
+        CliArgs { infile, outfile }
     }
 }
 
@@ -48,7 +48,8 @@ fn parse_file(path: &str, outfile: &str) -> io::Result<()> {
             Ok(line) => {
                 let parts: Vec<&str> = line.splitn(2, ':').collect();
                 if parts.len() == 2 {
-                    let line = parts[1].trim()[..32].to_string();
+                    let line = parts[1].trim().to_string();
+                    let line = remove_space(&line)[..32].to_string();
                     for char in line.chars() {
                         if char.is_ascii_hexdigit() {
                             hexstr.push(char);
@@ -77,4 +78,8 @@ fn parse_file(path: &str, outfile: &str) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+fn remove_space(s: &str) -> String {
+    s.chars().filter(|c| !c.is_whitespace()).collect()
 }
