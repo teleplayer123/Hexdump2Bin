@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::{self, BufRead, Write};
+use std::path::Path;
 
 
 pub struct SRecord {
@@ -8,7 +11,7 @@ pub struct SRecord {
 }
 
 impl SRecord {
-    pub fn parse(line: &str) -> Result<SRecord, String> {
+    fn parse(line: &str) -> Result<SRecord, String> {
         if line.len() < 10 || !line.starts_with('S') {
             return Err("Invalid SRecord line".to_string());
         }
@@ -67,3 +70,32 @@ impl SRecord {
         })
     }
 }
+
+pub fn parse_srecord_file(file_path: &str, outfile: &str) -> io::Result<()> {
+    let path = Path::new(file_path);
+    let file = File::open(&path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to open file: {}", e)))?;
+    let reader = io::BufReader::new(file);
+
+    let mut records = Vec::new();
+    for (line_number, line) in reader.lines().enumerate() {
+        let line = line.map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read line {}: {}", line_number + 1, e)))?;
+        if line.trim().is_empty() {
+            continue; // Skip empty lines
+        }
+        match SRecord::parse(&line) {
+            Ok(record) => records.push(record),
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, format!("Error parsing line {}: {}", line_number + 1, e))),
+        }
+    }
+    let mut output_file = File::create(outfile)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to create output file: {}", e)))?;
+
+    for record in records {
+        output_file
+            .write_all(format!("Type: {}, Address: {:08X}, Data: {:?}, Checksum: {:02X}\n", 
+                record.record_type, record.address, record.data, record.checksum).as_bytes())
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to write to output file: {}", e)))?;
+    }
+    Ok(())
+}
+

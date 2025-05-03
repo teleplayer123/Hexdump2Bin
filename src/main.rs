@@ -2,25 +2,44 @@ use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
 
+mod srec;
+
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let cli_args = CliArgs::new(&args);
     let outfile = cli_args.outfile.to_string();
     let filename = cli_args.infile.to_string();
-
-    match parse_file(&filename, &outfile) {
-        Ok(()) => {
-            println!("Successfully extracted hex code from '{}' and wrote to '{}'", filename, outfile);
+    let mode = cli_args.mode.to_string();
+    if mode == "uboot" {
+        match parse_file(&filename, &outfile) {
+            Ok(()) => {
+                println!("Successfully extracted hex code from '{}' and wrote to '{}'", filename, outfile);
+            }
+            Err(e) => {
+                eprint!("Error processing file: {}", e);
+            }
         }
-        Err(e) => {
-            eprint!("Error processing file: {}", e);
+        Ok(())
+    } else if mode == "srec" {
+        match srec::parse_srecord_file(&filename, &outfile) {
+            Ok(()) => {
+                // Process the records if needed
+                println!("Successfully extracted hex code from '{}' and wrote to '{}'", filename, outfile);
+            }
+            Err(e) => {
+                eprint!("Error processing file: {}", e);
+            }
         }
+        Ok(())
+    } else {
+        eprintln!("Unsupported mode: {}", mode);
+        Ok(())
     }
-    Ok(())
 }
 
 struct CliArgs {
+    mode: String,
     infile: String,
     outfile: String,
 }
@@ -32,8 +51,16 @@ impl CliArgs {
         }
         let infile = args[1].clone();
         let outfile = args[2].clone();
+        let mode = if args.len() > 3 {
+            args[3].clone()
+        } else {
+            "uboot".to_string()
+        };
+        if mode != "uboot" && mode != "srec" {
+            panic!("Invalid mode: {}. Use 'uboot' or 'srec'.", mode);
+        }
 
-        CliArgs { infile, outfile }
+        CliArgs { infile, outfile, mode }
     }
 }
 
