@@ -47,7 +47,7 @@ struct CliArgs {
 impl CliArgs {
     fn new(args: &[String]) -> CliArgs {
         if args.len() < 3 {
-            panic!("Not enough arguments");
+            panic!("Usage: {} <input_file> <output_file> [mode]", args[0]);
         }
         let infile = args[1].clone();
         let outfile = args[2].clone();
