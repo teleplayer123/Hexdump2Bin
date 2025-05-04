@@ -14,10 +14,14 @@ pub fn parse_file(path: &str, outfile: &str) -> io::Result<()> {
                 let parts: Vec<&str> = line.splitn(2, ':').collect();
                 if parts.len() == 2 {
                     let line = parts[1].trim().to_string();
-                    let line = remove_space(&line)[..32].to_string();
-                    for char in line.chars() {
-                        if char.is_ascii_hexdigit() {
-                            hexstr.push(char);
+                    if line.len() < 32 {
+                        eprintln!("Warning: line contains unrelated hex string, skipping...");
+                    } else {
+                        let line = remove_space(&line)[..32].to_string();
+                        for char in line.chars() {
+                            if char.is_ascii_hexdigit() {
+                                hexstr.push(char);
+                            }
                         }
                     }
                     for i in (0..hexstr.len()).step_by(2) {
