@@ -7,8 +7,10 @@ pub fn parse_file(path: &str, outfile: &str) -> io::Result<()> {
     let reader = io::BufReader::new(file);  
     let mut output_file = fs::File::create(outfile)?;
     let mut hexstr = String::new();
-
+    let mut line_num = 0;
     for line_result in reader.lines() {
+        line_num = line_num + 1;
+        println!("parsing line number: {}", line_num);
         match line_result {
             Ok(line) => {
                 let parts: Vec<&str> = line.splitn(2, ':').collect();
