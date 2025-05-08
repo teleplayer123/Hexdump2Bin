@@ -14,10 +14,11 @@ pub fn parse_file(path: &str, outfile: &str) -> io::Result<()> {
                 let parts: Vec<&str> = line.splitn(2, ':').collect();
                 if parts.len() == 2 {
                     let line = parts[1].trim().to_string();
-                    let line = remove_space(&line)[..32].to_string();
+                    let line = remove_space(&line);
                     if line.len() < 32 {
                         eprintln!("Invalid line {}, skipping...", line);
                     } else {
+                        let line = line[..32].to_string();
                         for char in line.chars() {
                             if char.is_ascii_hexdigit() {
                                 hexstr.push(char);
