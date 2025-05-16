@@ -67,8 +67,8 @@ impl CliArgs {
         } else {
             "uboot".to_string()
         };
-        if mode != "uboot" && mode != "srec" {
-            panic!("Invalid mode: {}. Use 'uboot' or 'srec'.", mode);
+        if mode != "uboot" && mode != "srec" && mode != "ihex" {
+            panic!("Invalid mode: {}. Options: [uboot|srec|ihex]", mode);
         }
 
         CliArgs { infile, outfile, mode }
