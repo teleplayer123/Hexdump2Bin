@@ -3,6 +3,7 @@ use std::io;
 
 mod srec;
 mod uboot;
+mod ihex;
 
 
 fn main() -> io::Result<()> {
@@ -25,6 +26,16 @@ fn main() -> io::Result<()> {
         match srec::parse_srecord_file(&filename, &outfile) {
             Ok(()) => {
                 // Process the records if needed
+                println!("Successfully extracted hex code from '{}' and wrote to '{}'", filename, outfile);
+            }
+            Err(e) => {
+                eprint!("Error processing file: {}", e);
+            }
+        }
+        Ok(())
+    } else if mode == "ihex" {
+        match ihex::parse_ihex_file(&filename, &outfile) {
+            Ok(()) => {
                 println!("Successfully extracted hex code from '{}' and wrote to '{}'", filename, outfile);
             }
             Err(e) => {
