@@ -64,6 +64,7 @@ pub fn parse_ihex_file(file_path: &str, outfile: &str) -> io::Result<()> {
         if record.record_type == 0 {
             output_file.write_all(&record.data)?;
         }
+        println!("Length: 0x{:x}, Address: 0x{:x}, Type: 0x{:x}, Checksum: 0x{:x}", &record.length, &record.address, &record.record_type, &record.checksum);
     }
 
     Ok(())
