@@ -91,10 +91,8 @@ pub fn parse_srecord_file(file_path: &str, outfile: &str) -> io::Result<()> {
         .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to create output file: {}", e)))?;
 
     for record in records {
-        output_file
-            .write_all(format!("Type: {}, Address: {:08X}, Data: {:?}, Checksum: {:02X}\n", 
-                record.record_type, record.address, record.data, record.checksum).as_bytes())
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to write to output file: {}", e)))?;
+        output_file.write_all(&record.data)?;
+        println!("Type: {:x}, Address: {:x}, Checksum: {:x}", &record.record_type, &record.address, &record.checksum);
     }
     Ok(())
 }
